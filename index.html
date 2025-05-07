@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume & Cover Letter Generator</title>
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize variables
+            let selectedResumeTemplate = 'classic';
+            let selectedCoverLetterTemplate = 'formal';
+            let educationCount = 0;
+            let experienceCount = 0;
+
+            // Tab switching
+            document.querySelectorAll('.tabs .tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    // Deactivate all tabs
+                    document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Activate selected tab
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Template selection
+            document.querySelectorAll('.template-item').forEach(template => {
+                template.addEventListener('click', function() {
+                    const templateType = this.dataset.template;
+                    const parent = this.closest('.template-selector');
+                    
+                    // Deselect all templates in this group
+                    parent.querySelectorAll('.template-item').forEach(t => t.classList.remove('selected'));
+                    
+                    // Select this template
+                    this.classList.add('selected');
+                    
+                    // Store the selected template
+                    if (parent.closest('#resume-preview-tab')) {
+                        selectedResumeTemplate = templateType;
+                    } else {
+                        selectedCoverLetterTemplate = templateType;
+                    }
+                });
+            });
+
+            // Add education item
+            document.getElementById('add-education').addEventListener('click', function() {
+                const educationList = document.getElementById('education-list');
+                const itemId = 'education-' + educationCount++;
+                
+                const educationItem = document.createElement('div');
+                educationItem.className = 'dynamic-item';
+                educationItem.id = itemId;
+                educationItem.innerHTML = `
+                    <button type="button" class="remove-item" onclick="removeItem('${itemId}')">×</button>
+                    <div class="form-group">
+                        <label for="${itemId}-degree">Degree</label>
+                        <input type="text" id="${itemId}-degree" placeholder="Bachelor of Science in Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label for="${itemId}-school">Institution</label>
+                        <input type="text" id="${itemId}-school" placeholder="University of Technology">
+                    </div>
+                    <div class="form-group">
+                        <label for="${itemId}-location">Location (Optional)</label>
+                        <input type="text" id="${itemId}-location" placeholder="New York, NY">
+                    </div>
+                    <div class="form-group">
+                        <label for="${itemId}-dates">Years</label>
+                        <input type="text" id="${itemId}-dates" placeholder="2018 - 2022">
+                    </div>
+                    <div class="form-group">
+                        <label for="${itemId}-details">Additional Details (Optional)</label>
+                        <textarea id="${itemId}-details" rows="2" placeholder="GPA: 3.8/4.0, Relevant Coursework: Data Structures, Algorithms, Web Development"></textarea>
+                    </div>
+                `;
+                
+                educationList.appendChild(educationItem);
+            });
+
+            // Add experience item
+            document.getElementById('add-experience').addEventListener('click', function() {
+                const experienceList = document.getElementById('experience-list');
+                const itemId = 'experience-' + experienceCount++;
+                
+                const experienceItem = document.createElement('div');
+                experienceItem.className = 'dynamic-item';
+                experienceItem.id = itemId;
+                experienceItem.innerHTML = `
+                    <button type="button" class="remove-item" onclick="removeItem('${itemId}')">×</button>
+                    <div class="form-group">
+                        <label for="${itemId}-title">Position Title</label>
+                        <input type="text" id="${itemId}-title" placeholder="Software Engineer">
+                    </div>
+                    <div class="form-group">
+                        <label for="${itemId}-company">Company</label>
+                        <input type="text" id="${itemId}-company" placeholder="ABC Tech Company">
+                    </div>
+                    <div class="form-group">
+                        <label for="${itemId}-location">Location (Optional)</label>
+                        <input type="text" id="${itemId}-location" placeholder="San Francisco, CA">
+                    </div>
+                    <div class="form-group">
+                        <label for="${itemId}-dates">Dates</label>
+                        <input type="text" id="${itemId}-dates" placeholder="January 2020 - Present">
+                    </div>
+                    <div class="form-group">
+                        <label for="${itemId}-responsibilities">Responsibilities & Achievements</label>
+                        <textarea id="${itemId}-responsibilities" rows="4" placeholder="• Developed and maintained RESTful APIs using Node.js and Express
+• Implemented responsive web designs using React and CSS
+• Improved application performance by 30% through code optimization
+• Collaborated with cross-functional teams to deliver features on schedule"></textarea>
+                    </div>
+                `;
+                
+                experienceList.appendChild(experienceItem);
+            });
+
+            // Remove dynamic item
+            window.removeItem = function(itemId) {
+                const item = document.getElementById(itemId);
+                if (item) {
+                    item.remove();
+                }
+            };
+
+            // Generate Resume
+            document.getElementById('generate-resume').addEventListener('click', function() {
+                const loading = document.querySelector('.loading');
+                loading.classList.remove('hide');
+                
+                setTimeout(() => {
+                    const resumePreview = document.getElementById('resume-preview');
+                    
+                    // Get all form data
+                    const name = document.getElementById('name').value || 'Your Name';
+                    const title = document.getElementById('title').value || 'Professional Title';
+                    const email = document.getElementById('email').value || 'email@example.com';
+                    const phone = document.getElementById('phone').value || 'Phone Number';
+                    const location = document.getElementById('location').value || 'Location';
+                    const linkedin = document.getElementById('linkedin').value || '';
+                    const website = document.getElementById('website').value || '';
+                    const summary = document.getElementById('summary').value || '';
+                    
+                    // Get skills
+                    const skillsInput = document.getElementById('skills').value;
+                    const skills = skillsInput ? skillsInput.split(',').map(skill => skill.trim()) : [];
+                    
+                    // Get additional sections
+                    const certifications = document.getElementById('certifications').value;
+                    const languages = document.getElementById('languages').value;
+                    const interests = document.getElementById('interests').value;
+                    
+                    // Get education items
+                    const educationItems = [];
+                    document.querySelectorAll('#education-list .dynamic-item').forEach(item => {
+                        const itemId = item.id;
+                        const degree = document.getElementById(`${itemId}-degree`).value;
+                        const school = document.getElementById(`${itemId}-school`).value;
+                        const edLocation = document.getElementById(`${itemId}-location`).value;
+                        const dates = document.getElementById(`${itemId}-dates`).value;
+                        const details = document.getElementById(`${itemId}-details`).value;
+                        
+                        if (degree && school) {
+                            educationItems.push({
+                                degree,
+                                school,
+                                location: edLocation,
+                                dates,
+                                details
+                            });
+                        }
+                    });
+                    
+                    // Get experience items
+                    const experienceItems = [];
+                    document.querySelectorAll('#experience-list .dynamic-item').forEach(item => {
+                        const itemId = item.id;
+                        const title = document.getElementById(`${itemId}-title`).value;
+                        const company = document.getElementById(`${itemId}-company`).value;
+                        const expLocation = document.getElementById(`${itemId}-location`).value;
+                        const dates = document.getElementById(`${itemId}-dates`).value;
+                        const responsibilities = document.getElementById(`${itemId}-responsibilities`).value;
+                        
+                        if (title && company) {
+                            experienceItems.push({
+                                title,
+                                company,
+                                location: expLocation,
+                                dates,
+                                responsibilities
+                            });
+                        }
+                    });
+                    
+                    // Generate resume HTML based on selected template
+                    let resumeHTML = '';
+                    
+                    if (selectedResumeTemplate === 'classic') {
+                        resumeHTML = `
+                            <div class="resume-header">
+                                <h1>${name}</h1>
+                                <p>${title}</p>
+                                <div class="resume-contact">
+                                    ${email} | ${phone} | ${location}
+                                    ${linkedin ? ` | <a href="${linkedin}">${linkedin}</a>` : ''}
+                                    ${website ? ` | <a href="${website}">${website}</a>` : ''}
+                                </div>
+                            </div>
+                            
+                            ${summary ? `
+                            <div class="resume-section">
+                                <h2>Professional Summary</h2>
+                                <p>${summary}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${experienceItems.length > 0 ? `
+                            <div class="resume-section">
+                                <h2>Experience</h2>
+                                ${experienceItems.map(exp => `
+                                    <div class="resume-experience-item">
+                                        <div class="resume-item-header">
+                                            <span>${exp.title} at ${exp.company}</span>
+                                            <span>${exp.dates}</span>
+                                        </div>
+                                        ${exp.location ? `<div>${exp.location}</div>` : ''}
+                                        <div class="resume-item-body">
+                                            <p>${exp.responsibilities.replace(/\n/g, '<br>')}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ` : ''}
+                            
+                            ${educationItems.length > 0 ? `
+                            <div class="resume-section">
+                                <h2>Education</h2>
+                                ${educationItems.map(edu => `
+                                    <div class="resume-education-item">
+                                        <div class="resume-item-header">
+                                            <span>${edu.degree}</span>
+                                            <span>${edu.dates}</span>
+                                        </div>
+                                        <div>${edu.school}${edu.location ? `, ${edu.location}` : ''}</div>
+                                        ${edu.details ? `<div>${edu.details}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ` : ''}
+                            
+                            ${skills.length > 0 ? `
+                            <div class="resume-section">
+                                <h2>Skills</h2>
+                                <div class="resume-skills">
+                                    ${skills.map(skill => `<span class="skill-item">${skill}</span>`).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${certifications ? `
+                            <div class="resume-section">
+                                <h2>Certifications</h2>
+                                <p>${certifications}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${languages ? `
+                            <div class="resume-section">
+                                <h2>Languages</h2>
+                                <p>${languages}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${interests ? `
+                            <div class="resume-section">
+                                <h2>Interests</h2>
+                                <p>${interests}</p>
+                            </div>
+                            ` : ''}
+                        `;
+                    } else if (selectedResumeTemplate === 'modern') {
+                        // Modern template has a different layout
+                        resumeHTML = `
+                            <div class="resume-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                                <div>
+                                    <h1 style="color: #166088; font-size: 2.2rem; margin-bottom: 0.25rem;">${name}</h1>
+                                    <p style="color: #4a6fa5; font-size: 1.2rem; margin-bottom: 0.5rem;">${title}</p>
+                                </div>
+                                <div style="text-align: right; font-size: 0.9rem;">
+                                    <div>${email}</div>
+                                    <div>${phone}</div>
+                                    <div>${location}</div>
+                                    ${linkedin ? `<div><a href="${linkedin}">${linkedin}</a></div>` : ''}
+                                    ${website ? `<div><a href="${website}">${website}</a></div>` : ''}
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 2rem;">
+                                <div style="flex: 2;">
+                                    ${summary ? `
+                                    <div class="resume-section">
+                                        <h2 style="color: #166088; border-bottom: 2px solid #4fc3dc; padding-bottom: 0.5rem;">About Me</h2>
+                                        <p>${summary}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${experienceItems.length > 0 ? `
+                                    <div class="resume-section">
+                                        <h2 style="color: #166088; border-bottom: 2px solid #4fc3dc; padding-bottom: 0.5rem;">Professional Experience</h2>
+                                        ${experienceItems.map(exp => `
+                                            <div class="resume-experience-item" style="margin-bottom: 1.5rem;">
+                                                <div style="font-weight: bold; color: #4a6fa5; font-size: 1.1rem;">${exp.title}</div>
+                                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                                    <span style="font-weight: 500;">${exp.company}${exp.location ? `, ${exp.location}` : ''}</span>
+                                                    <span style="color: #666;">${exp.dates}</span>
+                                                </div>
+                                                <div style="margin-top: 0.5rem;">
+                                                    <p>${exp.responsibilities.replace(/\n/g, '<br>')}</p>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${educationItems.length > 0 ? `
+                                    <div class="resume-section">
+                                        <h2 style="color: #166088; border-bottom: 2px solid #4fc3dc; padding-bottom: 0.5rem;">Education</h2>
+                                        ${educationItems.map(edu => `
+                                            <div class="resume-education-item" style="margin-bottom: 1rem;">
+                                                <div style="font-weight: bold; color: #4a6fa5;">${edu.degree}</div>
+                                                <div style="display: flex; justify-content: space-between;">
+                                                    <span>${edu.school}${edu.location ? `, ${edu.location}` : ''}</span>
+                                                    <span style="color: #666;">${edu.dates}</span>
+                                                </div>
+                                                ${edu.details ? `<div style="margin-top: 0.5rem; font-size: 0.9rem;">${edu.details}</div>` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                
+                                <div style="flex: 1;">
+                                    ${skills.length > 0 ? `
+                                    <div class="resume-section">
+                                        <h2 style="color: #166088; border-bottom: 2px solid #4fc3dc; padding-bottom: 0.5rem;">Skills</h2>
+                                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+                                            ${skills.map(skill => `<span style="background-color: #eef5fc; padding: 0.5rem; border-radius: 4px; font-size: 0.9rem;">${skill}</span>`).join('')}
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${certifications ? `
+                                    <div class="resume-section">
+                                        <h2 style="color: #166088; border-bottom: 2px solid #4fc3dc; padding-bottom: 0.5rem;">Certifications</h2>
+                                        <p>${certifications}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${languages ? `
+                                    <div class="resume-section">
+                                        <h2 style="color: #166088; border-bottom: 2px solid #4fc3dc; padding-bottom: 0.5rem;">Languages</h2>
+                                        <p>${languages}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${interests ? `
+                                    <div class="resume-section">
+                                        <h2 style="color: #166088; border-bottom: 2px solid #4fc3dc; padding-bottom: 0.5rem;">Interests</h2>
+                                        <p>${interests}</p>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    } else if (selectedResumeTemplate === 'minimalist') {
+                        // Minimalist template with clean design
+                        resumeHTML = `
+                            <div style="font-family: 'Arial', sans-serif; color: #333; line-height: 1.5;">
+                                <div style="text-align: center; margin-bottom: 2rem;">
+                                    <h1 style="font-size: 2rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem;">${name}</h1>
+                                    <p style="color: #666; font-size: 1.1rem; margin-bottom: 1rem;">${title}</p>
+                                    <div style="font-size: 0.9rem;">
+                                        ${email} | ${phone} | ${location}
+                                        ${linkedin ? ` | <a href="${linkedin}" style="color: #333; text-decoration: none;">${linkedin}</a>` : ''}
+                                        ${website ? ` | <a href="${website}" style="color: #333; text-decoration: none;">${website}</a>` : ''}
+                                    </div>
+                                </div>
+                                
+                                ${summary ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h2 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1rem;">Profile</h2>
+                                    <p>${summary}</p>
+                                </div>
+                                ` : ''}
+                                
+                                ${experienceItems.length > 0 ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h2 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1rem;">Experience</h2>
+                                    ${experienceItems.map(exp => `
+                                        <div style="margin-bottom: 1.5rem;">
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                                <span style="font-weight: bold;">${exp.title}</span>
+                                                <span>${exp.dates}</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                                <span style="font-style: italic;">${exp.company}${exp.location ? `, ${exp.location}` : ''}</span>
+                                            </div>
+                                            <div>
+                                                <p>${exp.responsibilities.replace(/\n/g, '<br>')}</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                ` : ''}
+                                
+                                ${educationItems.length > 0 ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h2 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1rem;">Education</h2>
+                                    ${educationItems.map(edu => `
+                                        <div style="margin-bottom: 1rem;">
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                                <span style="font-weight: bold;">${edu.degree}</span>
+                                                <span>${edu.dates}</span>
+                                            </div>
+                                            <div>${edu.school}${edu.location ? `, ${edu.location}` : ''}</div>
+                                            ${edu.details ? `<div style="font-size: 0.9rem; color: #666; margin-top: 0.25rem;">${edu.details}</div>` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                ` : ''}
+                                
+                                ${skills.length > 0 ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h2 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1rem;">Skills</h2>
+                                    <p>${skills.join(' • ')}</p>
+                                </div>
+                                ` : ''}
+                                
+                                ${certifications ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h2 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1rem;">Certifications</h2>
+                                    <p>${certifications}</p>
+                                </div>
+                                ` : ''}
+                                
+                                ${languages ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h2 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1rem;">Languages</h2>
+                                    <p>${languages}</p>
+                                </div>
+                                ` : ''}
+                                
+                                ${interests ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h2 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1rem;">Interests</h2>
+                                    <p>${interests}</p>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+                    
+                    resumePreview.innerHTML = resumeHTML;
+                    loading.classList.add('hide');
+                    
+                    // Automatically switch to the preview tab
+                    document.querySelector('[data-tab="resume-preview-tab"]').click();
+                }, 1000); // Simulating AI generation time
+            });
+            
+            // Generate Cover Letter
+            document.getElementById('generate-cover-letter').addEventListener('click', function() {
+                const loading = document.querySelector('.loading');
+                loading.classList.remove('hide');
+                
+                setTimeout(() => {
+                    const coverLetterPreview = document.getElementById('cover-letter-preview');
+                    
+                    // Get all form data
+                    const name = document.getElementById('name').value || 'Your Name';
+                    const email = document.getElementById('email').value || 'email@example.com';
+                    const phone = document.getElementById('phone').value || 'Phone Number';
+                    const location = document.getElementById('location').value || 'Location';
+                    
+                    const jobTitle = document.getElementById('job-title').value || 'Position Title';
+                    const companyName = document.getElementById('company-name').value || 'Company Name';
+                    const hiringManager = document.getElementById('hiring-manager').value || 'Hiring Manager';
+                    
+                    const letterIntro = document.getElementById('letter-intro').value || '';
+                    const letterBody = document.getElementById('letter-body').value || '';
+                    const letterClosing = document.getElementById('letter-closing').value || '';
+                    
+                    // Get current date in format: May 6, 2025
+                    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                    const now = new Date();
+                    const formattedDate = `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+                    
+                    // Generate cover letter HTML based on selected template
+                    let coverLetterHTML = '';
+                    
+                    if (selectedCoverLetterTemplate === 'formal') {
+                        coverLetterHTML = `
+                            <div style="font-family: 'Times New Roman', Times, serif; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+                                <div class="cover-letter-header" style="text-align: right; margin-bottom: 2rem;">
+                                    <div>${name}</div>
+                                    <div>${email}</div>
+                                    <div>${phone}</div>
+                                    <div>${location}</div>
+                                </div>
+                                
+                                <div class="cover-letter-date" style="margin-bottom: 1rem;">
+                                    ${formattedDate}
+                                </div>
+                                
+                                <div class="cover-letter-recipient" style="margin-bottom: 1rem;">
+                                    <div>${hiringManager}</div>
+                                    <div>${companyName}</div>
+                                </div>
+                                
+                                <div class="cover-letter-greeting" style="margin-bottom: 1rem;">
+                                    Dear ${hiringManager.includes(' ') ? hiringManager.split(' ')[1] : hiringManager},
+                                </div>
+                                
+                                <div class="cover-letter-body" style="margin-bottom: 1.5rem;">
+                                    <p style="margin-bottom: 1rem; text-indent: 2em;">${letterIntro || `I am writing to express my interest in the ${jobTitle} position at ${companyName}.`}</p>
+                                    
+                                    <p style="margin-bottom: 1rem; text-indent: 2em;">${letterBody || `Throughout my professional career, I have developed the skills and experience that align well with the requirements of this role. My background in [relevant field] has prepared me to make significant contributions to your team.`}</p>
+                                    
+                                    <p style="text-indent: 2em;">${letterClosing || `I am excited about the opportunity to bring my unique skills and experience to ${companyName}. I would welcome the chance to discuss how my background and abilities would be a good match for this position. Thank you for your time and consideration.`}</p>
+                                </div>
+                                
+                                <div class="cover-letter-closing" style="margin-bottom: 3rem;">
+                                    Sincerely,
+                                </div>
+                                
+                                <div class="cover-letter-signature">
+                                    ${name}
+                                </div>
+                            </div>
+                        `;
+                    } else if (selectedCoverLetterTemplate === 'creative') {
+                        coverLetterHTML = `
+                            <div style="font-family: 'Arial', sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                                    <div style="max-width: 60%;">
+                                        <h1 style="font-size: 2rem; color: #4a6fa5; margin-bottom: 0.5rem;">${name}</h1>
+                                        <p style="color: #666; font-style: italic;">${email} | ${phone} | ${location}</p>
+                                    </div>
+                                    <div style="text-align: right; color: #4a6fa5;">
+                                        <div>${formattedDate}</div>
+                                    </div>
+                                </div>
+                                
+                                <div style="border-left: 4px solid #4a6fa5; padding-left: 1rem; margin-bottom: 1.5rem;">
+                                    <h2 style="color: #166088;">Application for ${jobTitle} at ${companyName}</h2>
+                                </div>
+                                
+                                <div style="margin-bottom: 1rem;">
+                                    Dear ${hiringManager.includes(' ') ? hiringManager.split(' ')[1] : hiringManager},
+                                </div>
+                                
+                                <div style="margin-bottom: 1.5rem;">
+                                    <p style="margin-bottom: 1rem;">${letterIntro || `I am writing to express my interest in the ${jobTitle} position at ${companyName}.`}</p>
+                                    
+                                    <p style="margin-bottom: 1rem;">${letterBody || `Throughout my professional career, I have developed the skills and experience that align well with the requirements of this role. My background in [relevant field] has prepared me to make significant contributions to your team.`}</p>
+                                    
+                                    <p>${letterClosing || `I am excited about the opportunity to bring my unique skills and experience to ${companyName}. I would welcome the chance to discuss how my background and abilities would be a good match for this position. Thank you for your time and consideration.`}</p>
+                                </div>
+                                
+                                <div style="margin-bottom: 1rem;">
+                                    <p>Best regards,</p>
+                                </div>
+                                
+                                <div style="font-weight: bold; color: #4a6fa5;">
+                                    ${name}
+                                </div>
+                            </div>
+                        `;
+                    } else if (selectedCoverLetterTemplate === 'simple') {
+                        coverLetterHTML = `
+                            <div style="font-family: 'Calibri', sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
+                                    <div>
+                                        <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.25rem;">${name}</div>
+                                        <div>${email}</div>
+                                        <div>${phone}</div>
+                                        <div>${location}</div>
+                                    </div>
+                                    <div>
+                                        ${formattedDate}
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 1rem;">
+                                    <div>${hiringManager}</div>
+                                    <div>${companyName}</div>
+                                </div>
+                                
+                                <div style="margin-bottom: 1rem;">
+                                    Re: Application for ${jobTitle} Position
+                                </div>
+                                
+                                <div style="margin-bottom: 1rem;">
+                                    Dear ${hiringManager.includes(' ') ? hiringManager.split(' ')[1] : hiringManager},
+                                </div>
+                                
+                                <div style="margin-bottom: 1.5rem;">
+                                    <p style="margin-bottom: 1rem;">${letterIntro || `I am writing to express my interest in the ${jobTitle} position at ${companyName}.`}</p>
+                                    
+                                    <p style="margin-bottom: 1rem;">${letterBody || `Throughout my professional career, I have developed the skills and experience that align well with the requirements of this role. My background in [relevant field] has prepared me to make significant contributions to your team.`}</p>
+                                    
+                                    <p>${letterClosing || `I am excited about the opportunity to bring my unique skills and experience to ${companyName}. I would welcome the chance to discuss how my background and abilities would be a good match for this position. Thank you for your time and consideration.`}</p>
+                                </div>
+                                
+                                <div style="margin-bottom: 1rem;">
+                                    Sincerely,
+                                </div>
+                                
+                                <div style="font-weight: bold;">
+                                    ${name}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    coverLetterPreview.innerHTML = coverLetterHTML;
+                    loading.classList.add('hide');
+                    
+                    // Automatically switch to the preview tab
+                    document.querySelector('[data-tab="cover-letter-preview-tab"]').click();
+                }, 1000); // Simulating AI generation time
+            });
+            
+            // Print/Save as PDF
+            document.getElementById('print-resume').addEventListener('click', function() {
+                window.print();
+            });
+            
+            document.getElementById('print-cover-letter').addEventListener('click', function() {
+                window.print();
+            });
+            
+            // Reset forms
+            document.getElementById('reset-resume').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset the resume form? All data will be lost.')) {
+                    // Reset personal information
+                    document.getElementById('name').value = '';
+                    document.getElementById('title').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('phone').value = '';
+                    document.getElementById('location').value = '';
+                    document.getElementById('linkedin').value = '';
+                    document.getElementById('website').value = '';
+                    document.getElementById('summary').value = '';
+                    document.getElementById('skills').value = '';
+                    document.getElementById('certifications').value = '';
+                    document.getElementById('languages').value = '';
+                    document.getElementById('interests').value = '';
+                    
+                    // Clear education and experience items
+                    document.getElementById('education-list').innerHTML = '';
+                    document.getElementById('experience-list').innerHTML = '';
+                    
+                    // Reset counters
+                    educationCount = 0;
+                    experienceCount = 0;
+                    
+                    // Clear preview
+                    document.getElementById('resume-preview').innerHTML = `
+                        <div class="placeholder-text">
+                            Your resume preview will appear here. Fill out the form and click "Generate Resume".
+                        </div>
+                    `;
+                }
+            });
+            
+            document.getElementById('reset-cover-letter').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset the cover letter form? All data will be lost.')) {
+                    document.getElementById('job-title').value = '';
+                    document.getElementById('company-name').value = '';
+                    document.getElementById('hiring-manager').value = '';
+                    document.getElementById('letter-intro').value = '';
+                    document.getElementById('letter-body').value = '';
+                    document.getElementById('letter-closing').value = '';
+                    
+                    // Clear preview
+                    document.getElementById('cover-letter-preview').innerHTML = `
+                        <div class="placeholder-text">
+                            Your cover letter preview will appear here. Fill out the form and click "Generate Cover Letter".
+                        </div>
+                    `;
+                }
+            });
+            
+            // Add some example data to help the user get started
+            document.getElementById('add-education').click();
+            document.getElementById('add-experience').click();
+        });
+    </script>
+    <div class="container">
+        <header>
+            <h1>Resume & Cover Letter Generator</h1>
+            <p class="subtitle">Create professional job application documents in minutes</p>
+        </header>
+
+        <div class="app-container">
+            <div class="form-container">
+                <div class="tabs">
+                    <div class="tab active" data-tab="resume-form">Resume</div>
+                    <div class="tab" data-tab="cover-letter-form">Cover Letter</div>
+                </div>
+
+                <div class="tab-content active" id="resume-form">
+                    <div class="form-section">
+                        <h3>Personal Information</h3>
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="title">Professional Title</label>
+                            <input type="text" id="title" placeholder="Software Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="john.doe@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" placeholder="(123) 456-7890">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" placeholder="New York, NY">
+                        </div>
+                        <div class="form-group">
+                            <label for="linkedin">LinkedIn (Optional)</label>
+                            <input type="text" id="linkedin" placeholder="linkedin.com/in/johndoe">
+                        </div>
+                        <div class="form-group">
+                            <label for="website">Website/Portfolio (Optional)</label>
+                            <input type="text" id="website" placeholder="johndoe.com">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Professional Summary 
+                            <div class="tooltip">ⓘ
+                                <span class="tooltiptext">A brief statement highlighting your skills, experience, and career objectives.</span>
+                            </div>
+                        </h3>
+                        <div class="form-group">
+                            <textarea id="summary" rows="4" placeholder="Dedicated and detail-oriented Software Engineer with 5+ years of experience in developing scalable web applications..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Education</h3>
+                        <div class="dynamic-list" id="education-list">
+                            <!-- Education items will be added here -->
+                        </div>
+                        <button type="button" class="add-item-btn" id="add-education">
+                            <span>+ Add Education</span>
+                        </button>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Work Experience</h3>
+                        <div class="dynamic-list" id="experience-list">
+                            <!-- Experience items will be added here -->
+                        </div>
+                        <button type="button" class="add-item-btn" id="add-experience">
+                            <span>+ Add Experience</span>
+                        </button>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Skills</h3>
+                        <div class="form-group">
+                            <label for="skills">Skills (comma separated)</label>
+                            <input type="text" id="skills" placeholder="JavaScript, HTML, CSS, React, Node.js">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Additional Sections (Optional)</h3>
+                        <div class="form-group">
+                            <label for="certifications">Certifications</label>
+                            <textarea id="certifications" rows="2" placeholder="AWS Certified Solutions Architect, Google Cloud Professional Developer"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="languages">Languages</label>
+                            <input type="text" id="languages" placeholder="English (Native), Spanish (Intermediate)">
+                        </div>
+                        <div class="form-group">
+                            <label for="interests">Interests (Optional)</label>
+                            <input type="text" id="interests" placeholder="Open Source Contributing, Game Development, Hiking">
+                        </div>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-danger" id="reset-resume">Reset</button>
+                        <button type="button" class="btn btn-primary" id="generate-resume">Generate Resume</button>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="cover-letter-form">
+                    <div class="form-section">
+                        <h3>Job Information</h3>
+                        <div class="form-group">
+                            <label for="job-title">Position You're Applying For</label>
+                            <input type="text" id="job-title" placeholder="Senior Software Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label for="company-name">Company Name</label>
+                            <input type="text" id="company-name" placeholder="Tech Innovations Inc.">
+                        </div>
+                        <div class="form-group">
+                            <label for="hiring-manager">Hiring Manager's Name (Optional)</label>
+                            <input type="text" id="hiring-manager" placeholder="Jane Smith">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Cover Letter Content</h3>
+                        <div class="form-group">
+                            <label for="letter-intro">Introduction 
+                                <div class="tooltip">ⓘ
+                                    <span class="tooltiptext">Briefly introduce yourself and express your interest in the position.</span>
+                                </div>
+                            </label>
+                            <textarea id="letter-intro" rows="3" placeholder="I am writing to express my interest in the Senior Software Engineer position at Tech Innovations Inc. With my 5+ years of experience in software development..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="letter-body">Body 
+                                <div class="tooltip">ⓘ
+                                    <span class="tooltiptext">Highlight your most relevant skills and experiences that make you a good fit for the position.</span>
+                                </div>
+                            </label>
+                            <textarea id="letter-body" rows="5" placeholder="Throughout my career, I have developed expertise in building scalable web applications using modern technologies such as React and Node.js. At my current role at ABC Company, I successfully led a team of developers to implement..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="letter-closing">Closing 
+                                <div class="tooltip">ⓘ
+                                    <span class="tooltiptext">Express your enthusiasm, availability for an interview, and appreciation for consideration.</span>
+                                </div>
+                            </label>
+                            <textarea id="letter-closing" rows="3" placeholder="I am excited about the opportunity to bring my skills and experience to Tech Innovations Inc. and contribute to your team's success. I am available for an interview at your convenience and look forward to discussing how my background aligns with your needs."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-danger" id="reset-cover-letter">Reset</button>
+                        <button type="button" class="btn btn-primary" id="generate-cover-letter">Generate Cover Letter</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-container">
+                <div class="tabs">
+                    <div class="tab active" data-tab="resume-preview-tab">Resume Preview</div>
+                    <div class="tab" data-tab="cover-letter-preview-tab">Cover Letter Preview</div>
+                </div>
+
+                <div class="tab-content active" id="resume-preview-tab">
+                    <div class="template-selector">
+                        <div class="template-item selected" data-template="classic">
+                            <div class="template-preview">Classic</div>
+                            <div class="template-name">Classic</div>
+                        </div>
+                        <div class="template-item" data-template="modern">
+                            <div class="template-preview">Modern</div>
+                            <div class="template-name">Modern</div>
+                        </div>
+                        <div class="template-item" data-template="minimalist">
+                            <div class="template-preview">Minimalist</div>
+                            <div class="template-name">Minimalist</div>
+                        </div>
+                    </div>
+                    
+                    <div class="resume-preview" id="resume-preview">
+                        <div class="placeholder-text">
+                            Your resume preview will appear here. Fill out the form and click "Generate Resume".
+                        </div>
+                    </div>
+                    <div class="preview-controls">
+                        <button class="btn btn-outline btn-sm" id="print-resume">Print/Save PDF</button>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="cover-letter-preview-tab">
+                    <div class="template-selector">
+                        <div class="template-item selected" data-template="formal">
+                            <div class="template-preview">Formal</div>
+                            <div class="template-name">Formal</div>
+                        </div>
+                        <div class="template-item" data-template="creative">
+                            <div class="template-preview">Creative</div>
+                            <div class="template-name">Creative</div>
+                        </div>
+                        <div class="template-item" data-template="simple">
+                            <div class="template-preview">Simple</div>
+                            <div class="template-name">Simple</div>
+                        </div>
+                    </div>
+
+                    <div class="cover-letter-preview" id="cover-letter-preview">
+                        <div class="placeholder-text">
+                            Your cover letter preview will appear here. Fill out the form and click "Generate Cover Letter".
+                        </div>
+                    </div>
+                    <div class="preview-controls">
+                        <button class="btn btn-outline btn-sm" id="print-cover-letter">Print/Save PDF</button>
+                    </div>
+                </div>
+
+                <div class="loading hide">
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
